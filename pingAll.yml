@@ -1,0 +1,6 @@
+---
+# ANSIBLE PING TEST
+- hosts: all
+  tasks: 
+  - name: Ping
+    ping:
