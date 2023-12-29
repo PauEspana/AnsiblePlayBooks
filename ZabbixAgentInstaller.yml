@@ -1,0 +1,38 @@
+---
+# ZABBIX AGENT INSTALLER
+- hosts: all
+  tasks:
+      # ADD ZABBIX REPOS
+      - name: Create Temporary Folder for downloads.
+        become: yes
+        file: state=directory path=/tmp/zabbix/
+      - name: Download ZABBIX Repository.
+        become: yes
+        get_url: url=https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb dest=/tmp/zabbix/
+      - name: Install ZABBIX Repository.
+        become: yes
+        apt: deb=/tmp/zabbix/zabbix-release_6.0-4+ubuntu22.04_all.deb
+      - name: Execute apt update.
+        become: yes
+        apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+        # ZABBIX AGENT INSTALLER
+      - name: Install ZABBIX Agent
+        become: yes
+        apt: name=zabbix-agent
+      - name: Restart Zabbix Agent
+        become: yes
+        systemd: name=zabbix-agent state=restarted
+      - name: Enable Zabbix Agent on Startup.
+        become: yes
+        systemd: name=zabbix-agent enable
+        # ZABBIX PROXY INSTALLER
+      - name: Install ZABBIX Proxy MYSQL
+        become: yes
+        apt: name=zabbix-proxy-mysql
+      - name: Install ZABBIX SQL Scripts
+        become: yes
+        apt: name=zabbix-sql-scripts
+        # ZABBIX PROXY MYSQL
+      - name: MYSQL Query
+        become: yes
+        community.mysql.mysql_query: query=[create database zabbix_proxy character set utf8mb4 collate utf8mb4_bin, create user zabbix@localhost identified by 'password', grant all privileges on zabbix_proxy.* to zabbix@localhost, set global log_bin_trust_function_creators = 1]
